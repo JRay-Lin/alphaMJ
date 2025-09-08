@@ -1,0 +1,21 @@
+{
+  "training_time": 39.88980197906494,
+  "total_episodes": 100,
+  "final_avg_reward": -0.10352500000000006,
+  "final_avg_length": 85.82,
+  "best_agent_performance": -0.004803638965119063,
+  "agent_balance": 0.9999822061629277,
+  "config": {
+    "num_episodes": 100,
+    "rule_name": "standard",
+    "model_dir": "ai/models/stage1",
+    "log_dir": "ai/logs/stage1",
+    "centralized_training": true,
+    "max_steps_per_episode": 200,
+    "save_frequency": 100,
+    "eval_frequency": 500,
+    "log_frequency": 10,
+    "target_win_rate": 0.25,
+    "early_stopping_patience": 2000
+  }
+}

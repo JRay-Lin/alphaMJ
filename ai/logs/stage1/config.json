@@ -1,0 +1,13 @@
+{
+  "num_episodes": 100,
+  "rule_name": "standard",
+  "model_dir": "ai/models/stage1",
+  "log_dir": "ai/logs/stage1",
+  "centralized_training": true,
+  "max_steps_per_episode": 200,
+  "save_frequency": 100,
+  "eval_frequency": 500,
+  "log_frequency": 10,
+  "target_win_rate": 0.25,
+  "early_stopping_patience": 2000
+}
