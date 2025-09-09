@@ -288,46 +288,36 @@ class DQNAgent:
 
 class MultiAgentDQN:
     """
-    Multi-agent DQN manager with Centralized Training, Decentralized Execution (CTDE).
+    Multi-agent DQN manager for separate agent training.
     
-    Uses a single shared model for all agents during training, enabling better sample efficiency
-    and faster convergence. During execution, each agent uses the same trained model.
+    Each agent has its own model and replay buffer for better interpretability
+    and independent learning behavior.
     """
     
-    def __init__(self, num_agents: int = 4, centralized_training: bool = True, 
+    def __init__(self, num_agents: int = 4, centralized_training: bool = False, 
                  model_dir: str = "ai/models", device: str = None):
         """
-        Initialize multi-agent DQN system with CTDE.
+        Initialize multi-agent DQN system with individual agents.
         
         Args:
             num_agents: Number of agents to manage
-            centralized_training: Whether to use centralized training (recommended)
+            centralized_training: Ignored - always use individual training
             model_dir: Directory for saving models
             device: Computing device (cuda/mps/cpu)
         """
         self.num_agents = num_agents
         self.model_dir = model_dir
-        self.centralized_training = centralized_training
+        self.centralized_training = False  # Always use individual agents
         
-        if centralized_training:
-            # CTDE: Single shared model for all agents
-            self.shared_agent = DQNAgent(device=device)
-            # Create shared replay buffer for all experiences
-            self.shared_memory = ReplayBuffer(dqn_config.BUFFER_SIZE * 2, dqn_config.BATCH_SIZE, device=device)
-            self.shared_agent.memory = self.shared_memory
-            
-            # All agents reference the same model
-            self.agents = [self.shared_agent for _ in range(num_agents)]
-            
-            print(f"🤖 Initialized CTDE with 1 shared model for {num_agents} agents")
-        else:
-            # Traditional: Individual agents with separate models
-            self.agents = []
-            for i in range(num_agents):
-                self.agents.append(DQNAgent(device=device))
-            print(f"🤖 Initialized {num_agents} individual agents")
+        # Individual agents with separate models
+        self.agents = []
+        for i in range(num_agents):
+            agent = DQNAgent(device=device)
+            self.agents.append(agent)
         
-        # Performance tracking (still per agent position for analysis)
+        print(f"🤖 Initialized {num_agents} individual agents with separate models")
+        
+        # Performance tracking per agent
         self.agent_performances = [0.0] * num_agents
         self.current_generation = 0
         
@@ -343,45 +333,30 @@ class MultiAgentDQN:
         )
     
     def get_best_agent(self) -> DQNAgent:
-        """Get the best performing agent (shared model in CTDE)."""
-        if self.centralized_training:
-            return self.shared_agent
-        else:
-            best_idx = np.argmax(self.agent_performances)
-            return self.agents[best_idx]
+        """Get the best performing agent."""
+        best_idx = np.argmax(self.agent_performances)
+        return self.agents[best_idx]
     
     def save_all_agents(self, generation: int):
-        """Save model(s) for this generation."""
-        if self.centralized_training:
-            # Save only the shared model
-            filepath = os.path.join(self.model_dir, f"shared_model_gen_{generation}.pth")
-            self.shared_agent.save_model(filepath)
-            print(f"💾 Saved shared model: {filepath}")
-        else:
-            # Save all individual models
-            for i, agent in enumerate(self.agents):
-                filepath = os.path.join(self.model_dir, f"agent_{i}_gen_{generation}.pth")
-                agent.save_model(filepath)
+        """Save all individual agent models."""
+        for i, agent in enumerate(self.agents):
+            filepath = os.path.join(self.model_dir, f"agent_{i}_gen_{generation}.pth")
+            agent.save_model(filepath)
+        print(f"💾 Saved {self.num_agents} individual agent models")
     
     def load_generation(self, generation: int):
-        """Load model(s) from a specific generation."""
-        if self.centralized_training:
-            filepath = os.path.join(self.model_dir, f"shared_model_gen_{generation}.pth")
+        """Load all individual agent models from a specific generation."""
+        loaded_count = 0
+        for i, agent in enumerate(self.agents):
+            filepath = os.path.join(self.model_dir, f"agent_{i}_gen_{generation}.pth")
             if os.path.exists(filepath):
-                self.shared_agent.load_model(filepath)
-                print(f"📥 Loaded shared model: {filepath}")
-        else:
-            for i, agent in enumerate(self.agents):
-                filepath = os.path.join(self.model_dir, f"agent_{i}_gen_{generation}.pth")
-                if os.path.exists(filepath):
-                    agent.load_model(filepath)
+                agent.load_model(filepath)
+                loaded_count += 1
+        print(f"📥 Loaded {loaded_count}/{self.num_agents} agent models from generation {generation}")
     
     def tournament_evaluation(self, num_games: int = 100) -> Dict[int, float]:
         """
-        Evaluate model performance against baseline opponents.
-        
-        For CTDE: Tests shared model against random opponents.
-        For individual agents: Traditional self-play tournament.
+        Evaluate individual agent performance in self-play tournament.
         
         Args:
             num_games: Number of games to play
@@ -389,58 +364,8 @@ class MultiAgentDQN:
         Returns:
             Dictionary mapping agent index to win rate
         """
-        if self.centralized_training:
-            return self._evaluate_ctde_vs_baselines(num_games)
-        else:
-            return self._evaluate_traditional_tournament(num_games)
+        return self._evaluate_traditional_tournament(num_games)
     
-    def _evaluate_ctde_vs_baselines(self, num_games: int) -> Dict[int, float]:
-        """Evaluate CTDE shared model against baseline opponents."""
-        from ai.training_env import MultiAgentTrainingEnv
-        
-        print("🎯 Evaluating CTDE model vs baseline opponents...")
-        
-        # Test the trained model in position 0 against 3 baseline opponents
-        env = MultiAgentTrainingEnv(reward_system="stage1")
-        
-        # Set shared model to evaluation mode
-        self.shared_agent.set_training_mode(False)
-        
-        # Register: trained model at position 0, baselines at others
-        env.register_agent(0, self.shared_agent)
-        for i in range(1, 4):
-            baseline_agent = self._create_baseline_agent()
-            env.register_agent(i, baseline_agent)
-        
-        # Run evaluation games
-        trained_wins = 0
-        baseline_wins = 0
-        draws = 0
-        
-        for game in range(num_games):
-            result = env.run_episode()
-            winner = result['info'].get('winner', -1)
-            
-            if winner == 0:  # Trained model wins
-                trained_wins += 1
-            elif winner is not None and 0 < winner < 4:  # Baseline wins
-                baseline_wins += 1
-            else:  # Draw or invalid
-                draws += 1
-        
-        # Calculate performance
-        trained_win_rate = trained_wins / num_games
-        
-        # Restore training mode
-        self.shared_agent.set_training_mode(True)
-        
-        print(f"📊 CTDE Evaluation Results:")
-        print(f"   Trained model wins: {trained_wins}/{num_games} ({trained_win_rate:.1%})")
-        print(f"   Baseline wins: {baseline_wins}/{num_games}")
-        print(f"   Draws: {draws}/{num_games}")
-        
-        # Return results in expected format (same rate for all positions since it's one model)
-        return {i: trained_win_rate for i in range(4)}
     
     def _create_baseline_agent(self):
         """Create a simple random baseline agent for evaluation."""
@@ -520,30 +445,19 @@ class MultiAgentDQN:
         return win_rates
     
     def get_statistics(self) -> Dict[str, any]:
-        """Get statistics for the multi-agent system."""
+        """Get statistics for all individual agents."""
         stats = {
             'generation': self.current_generation,
             'agent_performances': self.agent_performances.copy(),
-            'centralized_training': self.centralized_training,
+            'centralized_training': False,
             'agent_stats': []
         }
         
-        if self.centralized_training:
-            # Single shared model statistics
-            shared_stats = self.shared_agent.get_statistics()
-            shared_stats['model_type'] = 'shared'
-            
-            # Replicate stats for each agent position for compatibility
-            for i in range(self.num_agents):
-                agent_stats = shared_stats.copy()
-                agent_stats['index'] = i
-                stats['agent_stats'].append(agent_stats)
-        else:
-            # Individual agent statistics
-            for i, agent in enumerate(self.agents):
-                agent_stats = agent.get_statistics()
-                agent_stats['index'] = i
-                agent_stats['model_type'] = 'individual'
-                stats['agent_stats'].append(agent_stats)
+        # Individual agent statistics
+        for i, agent in enumerate(self.agents):
+            agent_stats = agent.get_statistics()
+            agent_stats['index'] = i
+            agent_stats['model_type'] = 'individual'
+            stats['agent_stats'].append(agent_stats)
         
         return stats

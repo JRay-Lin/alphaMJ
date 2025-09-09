@@ -130,6 +130,8 @@ class MahjongTrainingEnv:
                     return next_states, rewards, dones, info
                 print(f"After draw: {len(current_player.hand.hands)} tiles")
                 print(f"Hand: {[str(tile) for tile in current_player.hand.hands]}")
+                if current_player.hand.sets:
+                    print(f"Sets: {[[str(tile) for tile in meld] for meld in current_player.hand.sets]}")
                 if current_player.hand.discards:
                     print(f"Discards: {[str(tile) for tile in current_player.hand.discards[-3:]]}")  # Last 3
                 
@@ -202,6 +204,8 @@ class MahjongTrainingEnv:
             print(f"🎯 {player.name} discards: {discarded_tile}")
             print(f"After discard: {len(player.hand.hands)} tiles")
             print(f"Remaining hand: {[str(tile) for tile in player.hand.hands]}")
+            if player.hand.sets:
+                print(f"Sets: {[[str(tile) for tile in meld] for meld in player.hand.sets]}")
             if discarded_tile and not self.game.game_over:
                 # Handle potential actions from other players
                 action_taken = self.game.handle_discard_actions(discarded_tile, player.index)
