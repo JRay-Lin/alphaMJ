@@ -1,8 +1,0 @@
-{
-  "episode": 500,
-  "performance": -0.004023542371601463,
-  "avg_reward": -0.10471806387225553,
-  "timestamp": 1757410150.001347,
-  "centralized_training": false,
-  "model_type": "individual"
-}
