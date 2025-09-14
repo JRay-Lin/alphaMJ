@@ -10,11 +10,17 @@ A comprehensive Deep Q-Learning training environment for Mahjong AI with multi-s
 - **Training Environment**: Complete game simulation with state encoding
 - **Multiple Rule Systems**: 
   - Standard (14 tiles: 4 melds + 1 pair)
+<<<<<<< HEAD
   - Taiwan (17 tiles: 5 melds + 1 pair)
 - **Hardware Acceleration**: Automatic device selection (CUDA > MPS > CPU)
 - **Interactive Training**: Jupyter notebook with validation between stages
 - **Comprehensive Evaluation**: Performance analysis and model comparison tools
 - **DFS Win Detection**: Uses depth-first search with backtracking for efficient win detection
+=======
+  - Taiwan (17 tiles: 5 melds + 1 pair) 
+- **Kong Support**: Handles kong sets (4 identical tiles) automatically
+- **Comprehensive Testing**: Full unittest suite with 15 test cases
+>>>>>>> b57a1821bed6780b641f875c11a8cf4f6db1c526
 
 ## Quick Start
 
@@ -58,6 +64,22 @@ standard_hand = [
 
 # Check winning hand
 print(is_winning_hand(standard_hand, 'standard'))  # True
+<<<<<<< HEAD
+=======
+
+# Taiwan 17-tile hand
+taiwan_hand = [
+    # ... 5 melds + 1 pair = 17 tiles
+]
+print(is_winning_hand(taiwan_hand, 'taiwan'))     # True
+
+# Hand with kong sets
+kong_hand = [
+    mj_tile(1, ","), mj_tile(1, ","), mj_tile(1, ","), mj_tile(1, ","),  # kong
+    # ... other melds + pair = 15 tiles total
+]
+print(is_winning_hand(kong_hand))     # True
+>>>>>>> b57a1821bed6780b641f875c11a8cf4f6db1c526
 ```
 
 ## AI Training Pipeline
@@ -89,6 +111,7 @@ print(is_winning_hand(standard_hand, 'standard'))  # True
 
 ## Meld Types
 
+<<<<<<< HEAD
 1. **Pung**: 3 identical tiles (e.g., ,,,)
 2. **Chow**: 3 consecutive tiles of same suit (e.g., 1,2,3,)
 3. **Kong**: 4 identical tiles (e.g., ,,,,)
@@ -102,6 +125,13 @@ The training system automatically selects the best available computing device:
 3. **CPU** - Fallback for compatibility
 
 Device selection is automatic but can be overridden with `--device` parameter.
+=======
+1. **Pung (;P)**: 3 identical tiles (e.g., ,,,)
+2. **Chow (P)**: 3 consecutive tiles of same suit (e.g., 1,2,3,)
+3. **Kong (ÓP)**: 4 identical tiles (e.g., ,,,,)
+4. **Pair (
+P)**: 2 identical tiles (e.g., RR)
+>>>>>>> b57a1821bed6780b641f875c11a8cf4f6db1c526
 
 ## Testing
 
@@ -140,4 +170,10 @@ python ai/play_vs_ai.py --models ai/models/stage2/best_model.pth
 
 **Algorithm**: DFS with backtracking  
 **Time Complexity**: O(3^n) where n is number of tile groups  
+<<<<<<< HEAD
 **Space Complexity**: O(n) for recursion stack
+=======
+**Space Complexity**: O(n) for recursion stack
+
+Built with d for flexible mahjong win detection.
+>>>>>>> b57a1821bed6780b641f875c11a8cf4f6db1c526
