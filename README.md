@@ -8,7 +8,6 @@ A flexible DFS-based mahjong win checker that supports multiple rule systems inc
 - **Multiple Rule Systems**: 
   - Standard (14 tiles: 4 melds + 1 pair)
   - Taiwan (17 tiles: 5 melds + 1 pair) 
-  - Flexible (auto-detect based on tile count)
 - **Kong Support**: Handles kong sets (4 identical tiles) automatically
 - **Comprehensive Testing**: Full unittest suite with 15 test cases
 
@@ -29,7 +28,6 @@ standard_hand = [
 
 # Check with different rules
 print(is_winning_hand(standard_hand, 'standard'))  # True
-print(is_winning_hand(standard_hand, 'flexible'))  # True
 
 # Taiwan 17-tile hand
 taiwan_hand = [
@@ -42,7 +40,7 @@ kong_hand = [
     mj_tile(1, ","), mj_tile(1, ","), mj_tile(1, ","), mj_tile(1, ","),  # kong
     # ... other melds + pair = 15 tiles total
 ]
-print(is_winning_hand(kong_hand, 'flexible'))     # True
+print(is_winning_hand(kong_hand))     # True
 ```
 
 ## Rule Systems
@@ -55,19 +53,16 @@ print(is_winning_hand(kong_hand, 'flexible'))     # True
 ### Taiwan Rule (`'taiwan'`)
 - **Tile Count**: 17 tiles  
 - **Structure**: 5 melds (pung/chow/kong) + 1 pair
-- **Usage**: Popular in Taiwan mahjong (3×5+2=17)
+- **Usage**: Popular in Taiwan mahjong (3Ã—5+2=17)
 
-### Flexible Rule (`'flexible'`)
-- **Auto-detection**: Automatically determines structure based on tile count
-- **Supports**: Any valid combination (3 melds + pair = 11 tiles, 6 melds + pair = 20 tiles, etc.)
-- **Kong-aware**: Handles kong sets that increase total tile count
 
 ## Meld Types
 
 1. **Pung (;P)**: 3 identical tiles (e.g., ,,,)
 2. **Chow (P)**: 3 consecutive tiles of same suit (e.g., 1,2,3,)
-3. **Kong (ÓP)**: 4 identical tiles (e.g., ,,,,)
-4. **Pair (P)**: 2 identical tiles (e.g., RR)
+3. **Kong (Ã“P)**: 4 identical tiles (e.g., ,,,,)
+4. **Pair (
+P)**: 2 identical tiles (e.g., RR)
 
 ## Testing
 
